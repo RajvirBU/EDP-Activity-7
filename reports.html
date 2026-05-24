@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Net & Brew Report Generator — Download and analyze daily sales, inventory, staff performance, and customer data." />
+  <title>Report Generator — Net & Brew Information System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
+  <style>
+    /* Report Type Cards */
+    .report-type-card {
+      background: var(--clr-surface);
+      border: 2px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      cursor: pointer;
+      transition: all var(--duration-base) var(--ease);
+      position: relative;
+    }
+    .report-type-card:hover { border-color: var(--clr-primary); background: var(--clr-primary-soft); transform: translateY(-2px); }
+    .report-type-card.selected {
+      border-color: var(--clr-primary);
+      background: var(--clr-primary-soft);
+      box-shadow: var(--shadow-primary);
+    }
+    .report-type-card .check {
+      position: absolute;
+      top: var(--space-sm); right: var(--space-sm);
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--clr-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: #fff;
+      opacity: 0;
+      transition: opacity var(--duration-base);
+    }
+    .report-type-card.selected .check { opacity: 1; }
+    .rt-icon { font-size: 2rem; margin-bottom: var(--space-sm); }
+    .rt-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+    .rt-desc { font-size: 0.75rem; color: var(--clr-text-muted); line-height: 1.5; }
+
+    /* Report preview panel */
+    .report-preview {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .report-header-bar {
+      background: var(--clr-surface-2);
+      padding: var(--space-lg) var(--space-xl);
+      border-bottom: 1px solid var(--clr-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+    }
+    .report-title-block .report-main-title {
+      font-size: 1.2rem; font-weight: 800;
+    }
+    .report-title-block .report-meta {
+      font-size: 0.75rem; color: var(--clr-text-muted); margin-top: 2px;
+    }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      gap: var(--space-md);
+      align-items: flex-end;
+      flex-wrap: wrap;
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+    }
+    .filter-bar .form-group { flex: 1; min-width: 160px; }
+    .filter-bar .btn { flex-shrink: 0; }
+
+    /* Summary row */
+    .report-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: var(--space-md);
+      padding: var(--space-lg) var(--space-xl);
+      background: var(--clr-bg-2);
+      border-bottom: 1px solid var(--clr-border);
+    }
+    .summary-item { text-align: center; }
+    .summary-val { font-size: 1.4rem; font-weight: 800; }
+    .summary-lbl { font-size: 0.72rem; color: var(--clr-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+    /* Pagination */
+    .pagination {
+      display: flex; align-items: center; gap: var(--space-sm);
+      padding: var(--space-md) var(--space-xl);
+      border-top: 1px solid var(--clr-border);
+      font-size: 0.82rem;
+    }
+    .page-btn {
+      width: 32px; height: 32px;
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all var(--duration-fast);
+      background: none;
+      color: var(--clr-text-muted);
+    }
+    .page-btn:hover { border-color: var(--clr-primary); color: var(--clr-primary); }
+    .page-btn.active { background: var(--clr-primary); border-color: var(--clr-primary); color: #fff; }
+    .page-info { color: var(--clr-text-muted); margin-left: auto; }
+
+    /* Print watermark area */
+    .report-watermark {
+      text-align: center;
+      padding: var(--space-sm);
+      font-size: 0.72rem;
+      color: var(--clr-text-faint);
+      font-family: var(--font-mono);
+    }
+
+    /* Export buttons */
+    .export-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-xl);
+      color: var(--clr-text-muted);
+    }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: var(--space-md); display: block; }
+
+    /* Report selector tabs */
+    .report-types {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    /* Highlighted cell */
+    td.highlight-green { color: var(--clr-success); font-weight: 700; }
+    td.highlight-red   { color: var(--clr-danger);  font-weight: 700; }
+    td.highlight-amber { color: var(--clr-amber);   font-weight: 700; }
+    td.highlight-purple{ color: var(--clr-primary); font-weight: 700; }
+
+    @media print {
+      .sidebar, .topbar, .filter-bar, .report-types, .page-header,
+      .export-actions, .pagination, .section-card:first-child { display: none !important; }
+      .main-content { margin-left: 0 !important; }
+      body { background: white !important; color: black !important; }
+      .report-preview { box-shadow: none; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">☕</div>
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-name">Net & Brew</div>
+        <div class="sidebar-brand-tag">Coffee • Gaming • Community</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Main Navigation">
+      <div class="nav-section-label">Main</div>
+      <a href="dashboard.html" class="nav-item">
+        <span class="nav-item-icon">📊</span> Dashboard
+      </a>
+      <a href="dashboard.html" class="nav-item">
+        <span class="nav-item-icon">🛒</span> Sales
+      </a>
+      <a href="dashboard.html" class="nav-item">
+        <span class="nav-item-icon">📦</span> Inventory
+      </a>
+      <a href="dashboard.html" class="nav-item">
+        <span class="nav-item-icon">👥</span> Customers
+      </a>
+      <div class="nav-section-label" style="margin-top:var(--space-md)">Management</div>
+      <a href="dashboard.html" class="nav-item">
+        <span class="nav-item-icon">🧑‍💼</span> Employees
+      </a>
+      <a href="reports.html" class="nav-item active">
+        <span class="nav-item-icon">📋</span> Reports
+      </a>
+      <a href="about.html" class="nav-item">
+        <span class="nav-item-icon">ℹ️</span> About
+      </a>
+      <div class="nav-section-label" style="margin-top:var(--space-md)">Account</div>
+      <a href="index.html" class="nav-item" onclick="sessionStorage.clear()">
+        <span class="nav-item-icon">🚪</span> Sign Out
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">AS</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Alice Smith</div>
+          <div class="user-role" id="sidebarRole">Manager · Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── Main Content ─── -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar">
+      <h1 class="topbar-title">Report Generator</h1>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search reports..." id="globalSearch" aria-label="Search" />
+      </div>
+      <a href="dashboard.html" class="btn btn-ghost" style="font-size:0.82rem;padding:0.5rem 1rem">← Dashboard</a>
+    </header>
+
+    <!-- Page Content -->
+    <main class="page-content">
+      <div class="page-header">
+        <div class="page-title">📋 Report Generator</div>
+        <div class="page-subtitle">Generate, filter, preview, and export data from coffee_shop_db views and tables.</div>
+      </div>
+
+      <!-- Report Type Selector -->
+      <div class="report-types">
+
+        <div class="report-type-card selected" data-report="daily" onclick="selectReport('daily', this)" id="card-daily">
+          <div class="check">✓</div>
+          <div class="rt-icon">📅</div>
+          <div class="rt-name">Daily Sales</div>
+          <p class="rt-desc">view_daily_sales — Revenue per day with transaction count</p>
+        </div>
+
+        <div class="report-type-card" data-report="staff" onclick="selectReport('staff', this)" id="card-staff">
+          <div class="check">✓</div>
+          <div class="rt-icon">🏆</div>
+          <div class="rt-name">Staff Performance</div>
+          <p class="rt-desc">view_staff_performance — Sales handled & revenue generated</p>
+        </div>
+
+        <div class="report-type-card" data-report="lowstock" onclick="selectReport('lowstock', this)" id="card-lowstock">
+          <div class="check">✓</div>
+          <div class="rt-icon">⚠️</div>
+          <div class="rt-name">Low Stock Alert</div>
+          <p class="rt-desc">view_low_stock — Products with stock below 15 units</p>
+        </div>
+
+        <div class="report-type-card" data-report="customers" onclick="selectReport('customers', this)" id="card-customers">
+          <div class="check">✓</div>
+          <div class="rt-icon">👥</div>
+          <div class="rt-name">Customer Spend</div>
+          <p class="rt-desc">GetCustomerTotalSpend() — Loyalty & total spend analysis</p>
+        </div>
+
+        <div class="report-type-card" data-report="sales" onclick="selectReport('sales', this)" id="card-sales">
+          <div class="check">✓</div>
+          <div class="rt-icon">🛒</div>
+          <div class="rt-name">All Sales Detail</div>
+          <p class="rt-desc">sales JOIN sale_items — Full transaction breakdown</p>
+        </div>
+
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar animate-slide-up">
+        <div class="form-group">
+          <label class="form-label" for="filterFrom">Date From</label>
+          <input class="form-control" type="date" id="filterFrom" value="2024-01-01" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="filterTo">Date To</label>
+          <input class="form-control" type="date" id="filterTo" value="2024-01-13" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="filterEmployee">Employee</label>
+          <select class="form-control" id="filterEmployee">
+            <option value="">All Employees</option>
+            <option value="2">Bob Jones</option>
+            <option value="3">Charlie Brown</option>
+            <option value="5">Ethan Hunt</option>
+            <option value="6">Fiona Gallagher</option>
+            <option value="8">Hannah Abbott</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="filterRows">Rows per Page</label>
+          <select class="form-control" id="filterRows">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="generateReport()">🔍 Generate</button>
+        <button class="btn btn-ghost" onclick="resetFilters()">↺ Reset</button>
+      </div>
+
+      <!-- Report Preview -->
+      <div class="report-preview animate-slide-up-delay-1">
+        <!-- Header -->
+        <div class="report-header-bar">
+          <div class="report-title-block">
+            <div class="report-main-title" id="reportTitle">📅 Daily Sales Report</div>
+            <div class="report-meta" id="reportMeta">Source: view_daily_sales · Generated: <span id="genTime"></span></div>
+          </div>
+          <div class="export-actions">
+            <button class="btn btn-ghost" style="font-size:0.82rem" onclick="printReport()" aria-label="Print report">🖨️ Print</button>
+            <button class="btn btn-ghost" style="font-size:0.82rem" onclick="exportCSV()" aria-label="Export CSV">📥 CSV</button>
+            <button class="btn btn-amber" style="font-size:0.82rem" onclick="showToast('Report PDF generation triggered!','success')" aria-label="Export PDF">📄 PDF</button>
+          </div>
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="report-summary" id="reportSummary">
+          <!-- Filled by JS -->
+        </div>
+
+        <!-- SQL Query display -->
+        <div style="padding:var(--space-md) var(--space-xl);border-bottom:1px solid var(--clr-border)">
+          <details>
+            <summary style="font-size:0.78rem;color:var(--clr-text-muted);cursor:pointer;font-weight:600;letter-spacing:0.03em">
+              🗄️ View SQL Query
+            </summary>
+            <pre id="sqlPreview" style="background:var(--clr-bg);border:1px solid var(--clr-border);border-radius:var(--radius-md);padding:var(--space-md);font-size:0.78rem;line-height:1.6;overflow-x:auto;margin-top:var(--space-sm);color:#a78bfa;font-family:var(--font-mono)"></pre>
+          </details>
+        </div>
+
+        <!-- Table -->
+        <div class="data-table-wrap" style="padding:0 var(--space-xl)">
+          <table class="data-table" id="reportTable" aria-label="Report data table">
+            <thead id="reportTableHead"></thead>
+            <tbody id="reportTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="paginationArea">
+          <button class="page-btn" onclick="changePage(-1)" aria-label="Previous page">‹</button>
+          <button class="page-btn active" id="pg1" onclick="setPage(1)">1</button>
+          <button class="page-btn" id="pg2" onclick="setPage(2)">2</button>
+          <button class="page-btn" id="pg3" onclick="setPage(3)">3</button>
+          <button class="page-btn" onclick="changePage(1)" aria-label="Next page">›</button>
+          <span class="page-info" id="pageInfo">Showing 1–10 of 30 records</span>
+        </div>
+
+        <div class="report-watermark">
+          Net & Brew Information System · coffee_shop_db · Generated by <span id="footerUser">Alice Smith</span> · <span id="footerDate"></span>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ── Report Datasets ── */
+const DATASETS = {
+
+  daily: {
+    title: '📅 Daily Sales Report',
+    source: 'SELECT CAST(s.sale_date AS DATE) AS Sale_Date,\n       COUNT(s.sale_id) AS Transaction_Count,\n       SUM(si.quantity * si.unit_price) AS Total_Revenue\nFROM sales s\nJOIN sale_items si ON s.sale_id = si.sale_id\nGROUP BY CAST(s.sale_date AS DATE);',
+    summary: [
+      {val:'13',lbl:'Days Covered',color:'var(--clr-primary)'},
+      {val:'₱10,944.00',lbl:'Total Revenue',color:'var(--clr-success)'},
+      {val:'30',lbl:'Transactions',color:'var(--clr-amber)'},
+      {val:'₱364.80',lbl:'Avg / Day',color:'var(--clr-teal)'},
+    ],
+    headers: ['Sale Date','Transaction Count','Total Revenue'],
+    rows: [
+      ['2024-01-01','3','₱1,075.50','highlight-purple'],
+      ['2024-01-02','4','₱1,579.00','highlight-green'],
+      ['2024-01-03','2','₱455.00',''],
+      ['2024-01-04','2','₱560.00',''],
+      ['2024-01-05','3','₱870.00',''],
+      ['2024-01-06','3','₱920.00',''],
+      ['2024-01-07','1','₱340.00',''],
+      ['2024-01-08','2','₱695.00',''],
+      ['2024-01-09','3','₱1,025.00',''],
+      ['2024-01-10','1','₱420.00',''],
+      ['2024-01-11','2','₱680.00',''],
+      ['2024-01-12','2','₱590.00',''],
+      ['2024-01-13','2','₱735.00',''],
+    ]
+  },
+
+  staff: {
+    title: '🏆 Staff Performance Report',
+    source: 'SELECT e.employee_id,\n       CONCAT(e.first_name,\' \',e.last_name) AS Employee_Name,\n       COUNT(s.sale_id) AS Total_Sales_Handled,\n       SUM(si.quantity * si.unit_price) AS Total_Revenue_Generated\nFROM employees e\nLEFT JOIN sales s ON e.employee_id = s.employee_id\nLEFT JOIN sale_items si ON s.sale_id = si.sale_id\nGROUP BY e.employee_id, e.first_name, e.last_name;',
+    summary: [
+      {val:'10',lbl:'Total Employees',color:'var(--clr-primary)'},
+      {val:'₱10,944.00',lbl:'Revenue Generated',color:'var(--clr-success)'},
+      {val:'30',lbl:'Sales Handled',color:'var(--clr-amber)'},
+      {val:'Bob Jones',lbl:'Top Performer',color:'var(--clr-teal)'},
+    ],
+    headers: ['Employee ID','Name','Role','Sales Handled','Revenue Generated'],
+    rows: [
+      ['1','Alice Smith','Manager','0','₱0.00',''],
+      ['2','Bob Jones','Barista','8','₱2,650.50','highlight-green'],
+      ['3','Charlie Brown','Barista','6','₱2,100.00',''],
+      ['4','Diana Prince','Shift Lead','0','₱0.00',''],
+      ['5','Ethan Hunt','Barista','5','₱1,750.00',''],
+      ['6','Fiona Gallagher','Barista','5','₱1,900.00',''],
+      ['7','George Costanza','Inventory','0','₱0.00',''],
+      ['8','Hannah Abbott','Barista','6','₱2,050.00',''],
+      ['9','Ian Malcolm','Security','0','₱0.00',''],
+      ['10','Julia Child','Chef','0','₱0.00',''],
+    ]
+  },
+
+  lowstock: {
+    title: '⚠️ Low Stock Alert',
+    source: 'SELECT product_name, category, stock_quantity\nFROM products\nWHERE stock_quantity < 15\nORDER BY stock_quantity ASC;',
+    summary: [
+      {val:'5',lbl:'Critical Items',color:'var(--clr-danger)'},
+      {val:'2',lbl:'Out of Stock',color:'var(--clr-danger)'},
+      {val:'3',lbl:'Low (< 15)',color:'var(--clr-warning)'},
+      {val:'₱2,450',lbl:'Restock Cost Est.',color:'var(--clr-amber)'},
+    ],
+    headers: ['Product Name','Category','Stock Qty','Status','Action'],
+    rows: [
+      ['Oat Milk (1L)','Ingredients','5','CRITICAL','highlight-red'],
+      ['Blueberry Syrup','Ingredients','3','CRITICAL','highlight-red'],
+      ['Espresso Beans (250g)','Coffee','8','LOW','highlight-amber'],
+      ['Paper Cups (S)','Supplies','12','LOW','highlight-amber'],
+      ['Espresso Cups','Supplies','11','LOW','highlight-amber'],
+    ]
+  },
+
+  customers: {
+    title: '👥 Customer Spend Analysis',
+    source: 'SELECT c.customer_id,\n       CONCAT(c.first_name,\' \',c.last_name) AS Customer_Name,\n       c.email,\n       c.loyalty_points,\n       GetCustomerTotalSpend(c.customer_id) AS Total_Spend\nFROM customers c\nORDER BY loyalty_points DESC;',
+    summary: [
+      {val:'30',lbl:'Total Customers',color:'var(--clr-primary)'},
+      {val:'100 pts',lbl:'Max Loyalty',color:'var(--clr-amber)'},
+      {val:'David Moore',lbl:'Top Customer',color:'var(--clr-teal)'},
+      {val:'5',lbl:'Zero Points',color:'var(--clr-text-muted)'},
+    ],
+    headers: ['ID','Customer Name','Email','Loyalty Points','Total Spend'],
+    rows: [
+      ['7','David Moore','dmoore@email.com','100 pts','₱450.00','highlight-green'],
+      ['25','Matthew Allen','mallen@email.com','90 pts','₱680.00','highlight-green'],
+      ['16','Susan Garcia','sgarcia@email.com','85 pts','₱920.00',''],
+      ['13','William Harris','wharris@email.com','60 pts','₱340.00',''],
+      ['4','Emily Davis','emily.d@email.com','55 pts','₱189.00',''],
+      ['20','Sarah Rodriguez','srod@email.com','50 pts','₱560.00',''],
+      ['12','Barbara White','bwhite@email.com','45 pts','₱870.00',''],
+      ['30','Sandra Hill','shill@email.com','42 pts','₱735.00',''],
+      ['2','Jane Smith','jane.s@email.com','40 pts','₱520.50',''],
+      ['21','Charles Lewis','clewis@email.com','35 pts','₱300.00',''],
+    ]
+  },
+
+  sales: {
+    title: '🛒 All Sales Detail Report',
+    source: 'SELECT s.sale_id,\n       DATE(s.sale_date) AS Sale_Date,\n       CONCAT(c.first_name,\' \',c.last_name) AS Customer,\n       CONCAT(e.first_name,\' \',e.last_name) AS Employee,\n       p.product_name,\n       si.quantity,\n       si.unit_price,\n       (si.quantity * si.unit_price) AS Line_Total\nFROM sales s\nJOIN sale_items si ON s.sale_id = si.sale_id\nJOIN customers c ON s.customer_id = c.customer_id\nJOIN employees e ON s.employee_id = e.employee_id\nJOIN products p ON si.product_id = p.product_id\nORDER BY s.sale_date;',
+    summary: [
+      {val:'30',lbl:'Total Sales',color:'var(--clr-primary)'},
+      {val:'₱10,944.00',lbl:'Grand Total',color:'var(--clr-success)'},
+      {val:'₱364.80',lbl:'Avg Transaction',color:'var(--clr-amber)'},
+      {val:'Jan 2024',lbl:'Period',color:'var(--clr-teal)'},
+    ],
+    headers: ['Sale ID','Date','Customer','Employee','Product','Qty','Unit Price','Line Total'],
+    rows: [
+      ['#0001','Jan 1','John Doe','Bob Jones','Espresso','2','₱120.00','₱240.00',''],
+      ['#0002','Jan 1','Jane Smith','Charlie Brown','Cappuccino','3','₱150.00','₱450.00','highlight-green'],
+      ['#0003','Jan 1','Michael Brown','Bob Jones','Latte','1','₱160.00','₱160.00',''],
+      ['#0004','Jan 2','Emily Davis','Ethan Hunt','Americano','1','₱130.00','₱130.00',''],
+      ['#0005','Jan 2','Chris Wilson','Fiona Gallagher','Frappuccino','4','₱175.00','₱700.00','highlight-green'],
+      ['#0006','Jan 2','Sarah Miller','Hannah Abbott','Cheesecake','2','₱200.00','₱400.00',''],
+      ['#0007','Jan 2','David Moore','Charlie Brown','Matcha Latte','3','₱165.00','₱495.00',''],
+      ['#0008','Jan 3','Laura Taylor','Bob Jones','Espresso','2','₱120.00','₱240.00',''],
+      ['#0009','Jan 3','James Anderson','Ethan Hunt','Americano','1','₱130.00','₱130.00',''],
+      ['#0010','Jan 4','Linda Thomas','Fiona Gallagher','Cappuccino','3','₱150.00','₱450.00',''],
+    ]
+  }
+};
+
+let currentReport = 'daily';
+let currentPage   = 1;
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  const user = JSON.parse(sessionStorage.getItem('nb_user') || '{"name":"Alice Smith","avatar":"AS","role":"admin"}');
+  document.getElementById('sidebarName').textContent    = user.name;
+  document.getElementById('sidebarAvatar').textContent  = user.avatar || 'AS';
+  document.getElementById('sidebarRole').textContent    = user.role === 'admin' ? 'Manager · Admin' : 'Barista · Staff';
+  document.getElementById('footerUser').textContent     = user.name;
+
+  const now = new Date();
+  const ts = now.toLocaleString('en-PH', {dateStyle:'medium', timeStyle:'short'});
+  document.getElementById('genTime').textContent   = ts;
+  document.getElementById('footerDate').textContent = ts;
+
+  generateReport();
+});
+
+/* ── Select Report Type ── */
+function selectReport(type, el) {
+  document.querySelectorAll('.report-type-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentReport = type;
+  currentPage   = 1;
+  generateReport();
+}
+
+/* ── Generate Report ── */
+function generateReport() {
+  const ds = DATASETS[currentReport];
+  document.getElementById('reportTitle').textContent = ds.title;
+  document.getElementById('reportMeta').innerHTML =
+    `Source: coffee_shop_db · Generated: <span id="genTime">${new Date().toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'})}</span>`;
+  document.getElementById('sqlPreview').textContent = ds.source;
+
+  // Summary
+  const sumEl = document.getElementById('reportSummary');
+  sumEl.innerHTML = ds.summary.map(s => `
+    <div class="summary-item">
+      <div class="summary-val" style="color:${s.color}">${s.val}</div>
+      <div class="summary-lbl">${s.lbl}</div>
+    </div>`).join('');
+
+  // Table headers
+  const thead = document.getElementById('reportTableHead');
+  thead.innerHTML = '<tr>' + ds.headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+  // Table rows
+  renderPage(1);
+  showToast(`${ds.title} generated successfully!`, 'success');
+}
+
+function renderPage(page) {
+  currentPage = page;
+  const ds = DATASETS[currentReport];
+  const perPage = parseInt(document.getElementById('filterRows').value) || 10;
+  const start   = (page - 1) * perPage;
+  const pageRows = ds.rows.slice(start, start + perPage);
+
+  const tbody = document.getElementById('reportTableBody');
+  tbody.innerHTML = pageRows.map(row => {
+    const colorClass = row[row.length - 1]; // last element is CSS class hint
+    const cells = row.slice(0, -1);
+    return `<tr>${cells.map((c, i) => `<td class="${i === cells.length - 1 ? colorClass : ''}">${c}</td>`).join('')}</tr>`;
+  }).join('');
+
+  // Pagination
+  const totalPages = Math.ceil(ds.rows.length / perPage);
+  document.getElementById('pageInfo').textContent =
+    `Showing ${start + 1}–${Math.min(start + perPage, ds.rows.length)} of ${ds.rows.length} records`;
+
+  [1,2,3].forEach(p => {
+    const btn = document.getElementById('pg' + p);
+    if (btn) { btn.classList.toggle('active', p === page); btn.style.display = p <= totalPages ? '' : 'none'; }
+  });
+}
+
+function changePage(dir) { renderPage(Math.max(1, currentPage + dir)); }
+function setPage(p)       { renderPage(p); }
+
+function resetFilters() {
+  document.getElementById('filterFrom').value     = '2024-01-01';
+  document.getElementById('filterTo').value       = '2024-01-13';
+  document.getElementById('filterEmployee').value = '';
+  document.getElementById('filterRows').value     = '10';
+  showToast('Filters reset.', 'success');
+}
+
+/* ── Export CSV ── */
+function exportCSV() {
+  const ds = DATASETS[currentReport];
+  const lines = [ds.headers.join(',')];
+  ds.rows.forEach(r => lines.push(r.slice(0,-1).map(c => `"${c}"`).join(',')));
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = currentReport + '_report_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  showToast('CSV exported successfully!', 'success');
+}
+
+/* ── Print ── */
+function printReport() { window.print(); }
+
+/* ── Toast ── */
+function showToast(msg, type = 'success') {
+  const tc = document.getElementById('toastContainer');
+  const t  = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span class="toast-icon">${type === 'success' ? '✅' : '❌'}</span><span>${msg}</span>`;
+  tc.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+/* Search filter */
+document.getElementById('globalSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#reportTableBody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>

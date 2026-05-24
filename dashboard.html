@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Net & Brew Dashboard — Real-time analytics, staff performance, and inventory overview." />
+  <title>Dashboard — Net & Brew Information System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
+  <style>
+    /* Stat Card Colors */
+    .stat-purple .stat-icon { background: var(--clr-primary-soft); }
+    .stat-purple .stat-value { color: var(--clr-primary); }
+    .stat-purple::after { background: var(--clr-primary); }
+
+    .stat-amber .stat-icon { background: var(--clr-amber-soft); }
+    .stat-amber .stat-value { color: var(--clr-amber); }
+    .stat-amber::after { background: var(--clr-amber); }
+
+    .stat-teal .stat-icon { background: var(--clr-teal-soft); }
+    .stat-teal .stat-value { color: var(--clr-teal); }
+    .stat-teal::after { background: var(--clr-teal); }
+
+    .stat-success .stat-icon { background: rgba(34,197,94,0.1); }
+    .stat-success .stat-value { color: var(--clr-success); }
+    .stat-success::after { background: var(--clr-success); }
+
+    /* Activity feed */
+    .activity-item {
+      display: flex; gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      align-items: flex-start;
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .activity-info { flex: 1; }
+    .activity-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 2px; }
+    .activity-time  { font-size: 0.75rem; color: var(--clr-text-muted); }
+    .activity-amount { font-size: 0.875rem; font-weight: 700; color: var(--clr-success); white-space: nowrap; }
+
+    /* Staff row */
+    .staff-row {
+      display: flex; align-items: center;
+      gap: var(--space-md); padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .staff-row:last-child { border-bottom: none; }
+    .staff-ava {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+    }
+    .staff-name { font-size: 0.875rem; font-weight: 600; }
+    .staff-role { font-size: 0.72rem; color: var(--clr-text-muted); }
+    .staff-sales { font-weight: 700; color: var(--clr-primary); font-size: 0.9rem; white-space: nowrap; }
+
+    /* Customer row */
+    .customer-row {
+      display: flex; align-items: center;
+      gap: var(--space-md); padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .customer-row:last-child { border-bottom: none; }
+
+    /* Low stock item */
+    .stock-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .stock-item:last-child { border-bottom: none; }
+    .stock-name { font-size: 0.875rem; font-weight: 600; }
+    .stock-cat  { font-size: 0.72rem; color: var(--clr-text-muted); }
+    .stock-qty  { font-weight: 800; font-size: 0.875rem; }
+
+    /* Canvas chart */
+    .canvas-wrap { position: relative; width: 100%; height: 220px; }
+    canvas { width: 100% !important; height: 100% !important; }
+
+    /* Welcome banner */
+    .welcome-banner {
+      background: linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(245,158,11,0.1) 100%);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg) var(--space-xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+      flex-wrap: wrap;
+    }
+    .welcome-text-main { font-size: 1.2rem; font-weight: 800; }
+    .welcome-text-sub  { font-size: 0.85rem; color: var(--clr-text-muted); }
+    .welcome-emoji     { font-size: 2.5rem; }
+
+    /* Quick action */
+    .quick-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px; padding: var(--space-md);
+      background: var(--clr-surface-2);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--duration-base) var(--ease);
+      font-size: 0.75rem; font-weight: 600; color: var(--clr-text-muted);
+    }
+    .quick-btn .qb-icon { font-size: 1.5rem; }
+    .quick-btn:hover { border-color: var(--clr-primary); color: var(--clr-primary); background: var(--clr-primary-soft); transform: translateY(-2px); }
+
+    /* Notification bubble on nav item */
+    .notif-ring {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--clr-danger);
+      position: absolute;
+      top: 8px; right: 8px;
+      animation: pulse-glow 1.5s ease-in-out infinite;
+    }
+
+    /* Modal form */
+    .modal-form { display: flex; flex-direction: column; gap: var(--space-md); }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- ─── Sidebar ─── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">☕</div>
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-name">Net & Brew</div>
+        <div class="sidebar-brand-tag">Coffee • Gaming • Community</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Main Navigation">
+      <div class="nav-section-label">Main</div>
+      <a href="dashboard.html" class="nav-item active" id="nav-dashboard">
+        <span class="nav-item-icon">📊</span> Dashboard
+      </a>
+      <a href="#" class="nav-item" id="nav-sales" onclick="openSalesModal(event)">
+        <span class="nav-item-icon">🛒</span> Sales
+        <span class="nav-badge">30</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-inventory" onclick="openInventoryModal(event)">
+        <span class="nav-item-icon">📦</span> Inventory
+        <span style="position:relative;margin-left:auto"><span class="nav-badge" style="background:var(--clr-danger)">⚠</span></span>
+      </a>
+      <a href="#" class="nav-item" id="nav-customers" onclick="openCustomersModal(event)">
+        <span class="nav-item-icon">👥</span> Customers
+      </a>
+
+      <div class="nav-section-label" style="margin-top:var(--space-md)">Management</div>
+      <a href="#" class="nav-item" id="nav-employees" onclick="openEmployeesModal(event)">
+        <span class="nav-item-icon">🧑‍💼</span> Employees
+      </a>
+      <a href="reports.html" class="nav-item">
+        <span class="nav-item-icon">📋</span> Reports
+      </a>
+      <a href="about.html" class="nav-item">
+        <span class="nav-item-icon">ℹ️</span> About
+      </a>
+
+      <div class="nav-section-label" style="margin-top:var(--space-md)">Account</div>
+      <a href="#" class="nav-item" onclick="openProfileModal(event)">
+        <span class="nav-item-icon">⚙️</span> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" onclick="openProfileModal()" id="sidebarUserBtn">
+        <div class="user-avatar" id="sidebarAvatar">AS</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Alice Smith</div>
+          <div class="user-role" id="sidebarRole">Manager · Admin</div>
+        </div>
+        <span style="color:var(--clr-text-muted);font-size:0.8rem">⋮</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── Main Content ─── -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="btn btn-ghost btn-icon" id="sidebarToggle" style="display:none" aria-label="Toggle sidebar">☰</button>
+      <h1 class="topbar-title">Dashboard</h1>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search anything..." id="globalSearch" aria-label="Search" />
+      </div>
+      <button class="btn btn-ghost btn-icon" style="position:relative" aria-label="Notifications">
+        🔔
+        <span class="notif-ring"></span>
+      </button>
+      <a href="reports.html" class="btn btn-primary" style="font-size:0.82rem;padding:0.5rem 1rem">📋 Reports</a>
+    </header>
+
+    <!-- Page Content -->
+    <main class="page-content">
+      <!-- Welcome Banner -->
+      <div class="welcome-banner animate-fade-in">
+        <div>
+          <div class="welcome-text-main">Good afternoon, <span id="welcomeName">Alice</span>! 👋</div>
+          <div class="welcome-text-sub">Here's what's happening at Net & Brew today — <span id="todayDate"></span></div>
+        </div>
+        <div class="welcome-emoji animate-float">☕🎮</div>
+      </div>
+
+      <!-- ─── KPI Stats ─── -->
+      <div class="grid-4" style="margin-bottom:var(--space-xl)">
+        <div class="stat-card stat-purple animate-slide-up">
+          <div class="stat-icon">💰</div>
+          <div class="stat-value" id="kpiRevenue">₱0.00</div>
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-trend up">▲ 12.5% from last month</div>
+        </div>
+        <div class="stat-card stat-amber animate-slide-up-delay-1">
+          <div class="stat-icon">🛒</div>
+          <div class="stat-value">30</div>
+          <div class="stat-label">Total Sales</div>
+          <div class="stat-trend up">▲ 8 new this week</div>
+        </div>
+        <div class="stat-card stat-teal animate-slide-up-delay-2">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value">30</div>
+          <div class="stat-label">Customers</div>
+          <div class="stat-trend up">▲ 5 new this month</div>
+        </div>
+        <div class="stat-card stat-success animate-slide-up-delay-3">
+          <div class="stat-icon">📦</div>
+          <div class="stat-value" id="kpiLowStock">–</div>
+          <div class="stat-label">Low Stock Items</div>
+          <div class="stat-trend down" id="lowStockTrend">Check inventory</div>
+        </div>
+      </div>
+
+      <!-- ─── Quick Actions ─── -->
+      <div class="section-card animate-slide-up" style="margin-bottom:var(--space-xl)">
+        <div class="section-card-header">
+          <div class="section-card-title">⚡ Quick Actions</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:var(--space-sm)">
+          <button class="quick-btn" onclick="openSalesModal()" aria-label="New Sale">
+            <span class="qb-icon">➕</span> New Sale
+          </button>
+          <button class="quick-btn" onclick="openInventoryModal()" aria-label="Add Product">
+            <span class="qb-icon">📦</span> Add Product
+          </button>
+          <button class="quick-btn" onclick="openCustomersModal()" aria-label="Add Customer">
+            <span class="qb-icon">👤</span> Add Customer
+          </button>
+          <button class="quick-btn" onclick="openEmployeesModal()" aria-label="Add Employee">
+            <span class="qb-icon">🧑‍💼</span> Add Employee
+          </button>
+          <a href="reports.html" class="quick-btn">
+            <span class="qb-icon">📋</span> Reports
+          </a>
+          <button class="quick-btn" onclick="showToast('Restocking triggered via stored procedure!','success')">
+            <span class="qb-icon">🔄</span> Restock
+          </button>
+        </div>
+      </div>
+
+      <!-- ─── Charts Row ─── -->
+      <div class="grid-2" style="margin-bottom:var(--space-xl)">
+        <!-- Bar Chart -->
+        <div class="section-card animate-slide-up">
+          <div class="section-card-header">
+            <div class="section-card-title">📈 Daily Revenue (Jan 2024)</div>
+            <span class="badge badge-teal">Last 10 Days</span>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Donut Chart -->
+        <div class="section-card animate-slide-up-delay-1">
+          <div class="section-card-header">
+            <div class="section-card-title">🗂️ Sales by Category</div>
+            <span class="badge badge-amber">Overview</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;height:220px">
+            <div class="donut-wrap">
+              <svg class="donut-svg" width="160" height="160" viewBox="0 0 160 160" aria-label="Donut chart">
+                <circle cx="80" cy="80" r="60" fill="none" stroke="var(--clr-surface-2)" stroke-width="28"/>
+                <!-- Coffee: 40% -->
+                <circle cx="80" cy="80" r="60" fill="none" stroke="#8b5cf6" stroke-width="28"
+                  stroke-dasharray="150.8 226.2" stroke-dashoffset="0" transform="rotate(-90 80 80)" />
+                <!-- Food: 25% -->
+                <circle cx="80" cy="80" r="60" fill="none" stroke="#f59e0b" stroke-width="28"
+                  stroke-dasharray="94.2 282.7" stroke-dashoffset="-150.8" transform="rotate(-90 80 80)" />
+                <!-- Gaming: 20% -->
+                <circle cx="80" cy="80" r="60" fill="none" stroke="#14b8a6" stroke-width="28"
+                  stroke-dasharray="75.4 301.6" stroke-dashoffset="-245.0" transform="rotate(-90 80 80)" />
+                <!-- Other: 15% -->
+                <circle cx="80" cy="80" r="60" fill="none" stroke="#ec4899" stroke-width="28"
+                  stroke-dasharray="56.5 320.4" stroke-dashoffset="-320.4" transform="rotate(-90 80 80)" />
+                <text x="80" y="76" text-anchor="middle" fill="var(--clr-text)" font-size="14" font-weight="800" font-family="Outfit,sans-serif">₱Sales</text>
+                <text x="80" y="92" text-anchor="middle" fill="var(--clr-text-muted)" font-size="10" font-family="Outfit,sans-serif">Jan 2024</text>
+              </svg>
+              <div class="donut-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div><span>Coffee — 40%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span>Food — 25%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#14b8a6"></div><span>Gaming — 20%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div><span>Other — 15%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Bottom Section ─── -->
+      <div class="grid-2" style="margin-bottom:var(--space-xl)">
+        <!-- Recent Sales / Activity -->
+        <div class="section-card animate-slide-up">
+          <div class="section-card-header">
+            <div class="section-card-title">🧾 Recent Transactions</div>
+            <a href="reports.html" style="font-size:0.78rem;color:var(--clr-primary);font-weight:600">View All →</a>
+          </div>
+          <div id="activityFeed">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+
+        <!-- Staff Performance -->
+        <div class="section-card animate-slide-up-delay-1">
+          <div class="section-card-header">
+            <div class="section-card-title">🏆 Staff Performance</div>
+            <span class="badge badge-primary">view_staff_performance</span>
+          </div>
+          <div id="staffPerformance">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Low Stock -->
+        <div class="section-card animate-slide-up">
+          <div class="section-card-header">
+            <div class="section-card-title">⚠️ Low Stock Alert</div>
+            <span class="badge badge-danger">view_low_stock</span>
+          </div>
+          <p style="font-size:0.8rem;color:var(--clr-text-muted);margin-bottom:var(--space-md)">Products with stock quantity below 15 units.</p>
+          <div id="lowStockList"><!-- JS --></div>
+          <button class="btn btn-amber btn-full" style="margin-top:var(--space-md)" onclick="showToast('Restock procedure executed: RestockProduct()','success')">
+            🔄 Run RestockProduct()
+          </button>
+        </div>
+
+        <!-- Top Customers -->
+        <div class="section-card animate-slide-up-delay-1">
+          <div class="section-card-header">
+            <div class="section-card-title">⭐ Top Customers</div>
+            <span class="badge badge-amber">Loyalty Points</span>
+          </div>
+          <div id="topCustomers"><!-- JS --></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ─── MODALS ─── -->
+
+<!-- New Sale Modal -->
+<div class="modal-overlay hidden" id="salesModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">🛒 Record New Sale</div><p style="font-size:0.82rem;color:var(--clr-text-muted)">Add a transaction to the sales table</p></div>
+      <button class="modal-close" onclick="closeModal('salesModal')">✕</button>
+    </div>
+    <form class="modal-form" onsubmit="submitSale(event)">
+      <div class="form-group">
+        <label class="form-label" for="saleCustomer">Customer</label>
+        <select class="form-control" id="saleCustomer">
+          <option value="">— Select Customer —</option>
+          <option value="1">1 · John Doe</option>
+          <option value="2">2 · Jane Smith</option>
+          <option value="3">3 · Michael Brown</option>
+          <option value="4">4 · Emily Davis</option>
+          <option value="5">5 · Chris Wilson</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="saleEmployee">Served By</label>
+        <select class="form-control" id="saleEmployee">
+          <option value="">— Select Employee —</option>
+          <option value="2">Bob Jones (Barista)</option>
+          <option value="3">Charlie Brown (Barista)</option>
+          <option value="5">Ethan Hunt (Barista)</option>
+          <option value="6">Fiona Gallagher (Barista)</option>
+          <option value="8">Hannah Abbott (Barista)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="saleProduct">Product</label>
+        <select class="form-control" id="saleProduct">
+          <option value="">— Select Product —</option>
+          <option value="1">Espresso — ₱120.00</option>
+          <option value="2">Cappuccino — ₱150.00</option>
+          <option value="3">Latte — ₱160.00</option>
+          <option value="4">Americano — ₱130.00</option>
+          <option value="5">Blueberry Cheesecake — ₱200.00</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="saleQty">Quantity</label>
+        <input class="form-control" type="number" id="saleQty" min="1" max="50" value="1" />
+      </div>
+      <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm)">
+        <button class="btn btn-ghost" type="button" onclick="closeModal('salesModal')">Cancel</button>
+        <button class="btn btn-primary" type="submit" style="flex:1">✅ Record Sale</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Inventory Modal -->
+<div class="modal-overlay hidden" id="inventoryModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">📦 Add Product</div><p style="font-size:0.82rem;color:var(--clr-text-muted)">Insert a new record into the products table</p></div>
+      <button class="modal-close" onclick="closeModal('inventoryModal')">✕</button>
+    </div>
+    <form class="modal-form" onsubmit="submitProduct(event)">
+      <div class="form-group">
+        <label class="form-label" for="prodName">Product Name</label>
+        <input class="form-control" type="text" id="prodName" placeholder="e.g. Caramel Macchiato" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="prodCategory">Category</label>
+        <select class="form-control" id="prodCategory" required>
+          <option value="">— Select Category —</option>
+          <option>Coffee</option>
+          <option>Tea</option>
+          <option>Food</option>
+          <option>Gaming</option>
+          <option>Merchandise</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="prodPrice">Price (₱)</label>
+          <input class="form-control" type="number" id="prodPrice" step="0.01" min="0" placeholder="0.00" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="prodStock">Stock Quantity</label>
+          <input class="form-control" type="number" id="prodStock" min="0" placeholder="0" required />
+        </div>
+      </div>
+      <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm)">
+        <button class="btn btn-ghost" type="button" onclick="closeModal('inventoryModal')">Cancel</button>
+        <button class="btn btn-primary" type="submit" style="flex:1">✅ Add Product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Customers Modal -->
+<div class="modal-overlay hidden" id="customersModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div><div class="modal-title">👥 Add Customer</div><p style="font-size:0.82rem;color:var(--clr-text-muted)">Register a new customer record</p></div>
+      <button class="modal-close" onclick="closeModal('customersModal')">✕</button>
+    </div>
+    <form class="modal-form" onsubmit="submitCustomer(event)">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="custFirst">First Name</label>
+          <input class="form-control" type="text" id="custFirst" placeholder="John" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="custLast">Last Name</label>
+          <input class="form-control" type="text" id="custLast" placeholder="Doe" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="custEmail">Email Address</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉️</span>
+          <input class="form-control" type="email" id="custEmail" placeholder="john@example.com" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="custPoints">Initial Loyalty Points</label>
+        <input class="form-control" type="number" id="custPoints" min="0" value="0" />
+        <span class="form-hint">Default: 0 points</span>
+      </div>
+      <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm)">
+        <button class="btn btn-ghost" type="button" onclick="closeModal('customersModal')">Cancel</button>
+        <button class="btn btn-primary" type="submit" style="flex:1">✅ Register Customer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Employees Modal -->
+<div class="modal-overlay hidden" id="employeesModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div><div class="modal-title">🧑‍💼 Add Employee</div><p style="font-size:0.82rem;color:var(--clr-text-muted)">Add a new staff member to the system</p></div>
+      <button class="modal-close" onclick="closeModal('employeesModal')">✕</button>
+    </div>
+    <form class="modal-form" onsubmit="submitEmployee(event)">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="empFirst">First Name</label>
+          <input class="form-control" type="text" id="empFirst" placeholder="Jane" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="empLast">Last Name</label>
+          <input class="form-control" type="text" id="empLast" placeholder="Doe" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="empRole">Role</label>
+        <select class="form-control" id="empRole" required>
+          <option value="">— Select Role —</option>
+          <option>Manager</option>
+          <option>Barista</option>
+          <option>Shift Lead</option>
+          <option>Chef</option>
+          <option>Inventory</option>
+          <option>Security</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="empHireDate">Hire Date</label>
+        <input class="form-control" type="date" id="empHireDate" required />
+      </div>
+      <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm)">
+        <button class="btn btn-ghost" type="button" onclick="closeModal('employeesModal')">Cancel</button>
+        <button class="btn btn-primary" type="submit" style="flex:1">✅ Add Employee</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay hidden" id="profileModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Account Settings</div>
+      <button class="modal-close" onclick="closeModal('profileModal')">✕</button>
+    </div>
+    <div style="text-align:center;margin-bottom:var(--space-lg)">
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;margin:0 auto var(--space-sm)" id="profileAvatarLarge">AS</div>
+      <div style="font-weight:700;font-size:1.05rem" id="profileNameLarge">Alice Smith</div>
+      <div style="font-size:0.8rem;color:var(--clr-text-muted)" id="profileRoleLarge">Manager · Admin</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--space-md)">
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input class="form-control" type="text" id="profileName" placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-control" type="email" id="profileEmail" placeholder="your@email.com" />
+      </div>
+      <div style="display:flex;gap:var(--space-sm)">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeModal('profileModal')">Cancel</button>
+        <button class="btn btn-primary" style="flex:1" onclick="saveProfile()">Save Changes</button>
+      </div>
+      <div class="divider">or</div>
+      <a href="index.html" class="btn btn-danger btn-full" onclick="sessionStorage.clear()">🚪 Sign Out</a>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ── Data ── */
+const SALES_DATA = [
+  {id:1,date:'Jan 1',customer:'John Doe',employee:'Bob Jones',amount:345.00},
+  {id:2,date:'Jan 1',customer:'Jane Smith',employee:'Charlie Brown',amount:520.50},
+  {id:3,date:'Jan 1',customer:'Michael Brown',employee:'Bob Jones',amount:210.00},
+  {id:4,date:'Jan 2',customer:'Emily Davis',employee:'Ethan Hunt',amount:189.00},
+  {id:5,date:'Jan 2',customer:'Chris Wilson',employee:'Fiona Gallagher',amount:640.00},
+  {id:6,date:'Jan 2',customer:'Sarah Miller',employee:'Hannah Abbott',amount:300.00},
+  {id:7,date:'Jan 2',customer:'David Moore',employee:'Charlie Brown',amount:450.00},
+  {id:8,date:'Jan 3',customer:'Laura Taylor',employee:'Bob Jones',amount:280.00},
+  {id:9,date:'Jan 3',customer:'James Anderson',employee:'Ethan Hunt',amount:175.00},
+  {id:10,date:'Jan 4',customer:'Linda Thomas',employee:'Fiona Gallagher',amount:560.00},
+];
+
+const STAFF_DATA = [
+  {name:'Bob Jones',role:'Barista',sales:8,revenue:2650.50,color:'linear-gradient(135deg,#f59e0b,#d97706)',init:'BJ'},
+  {name:'Charlie Brown',role:'Barista',sales:6,revenue:2100.00,color:'linear-gradient(135deg,#14b8a6,#0d9488)',init:'CB'},
+  {name:'Ethan Hunt',role:'Barista',sales:5,revenue:1750.00,color:'linear-gradient(135deg,#8b5cf6,#6d28d9)',init:'EH'},
+  {name:'Fiona Gallagher',role:'Barista',sales:5,revenue:1900.00,color:'linear-gradient(135deg,#ec4899,#be185d)',init:'FG'},
+  {name:'Hannah Abbott',role:'Barista',sales:6,revenue:2050.00,color:'linear-gradient(135deg,#3b82f6,#1d4ed8)',init:'HA'},
+];
+
+const LOW_STOCK = [
+  {name:'Espresso Beans (250g)',category:'Coffee',qty:8,color:'var(--clr-danger)'},
+  {name:'Oat Milk',category:'Ingredients',qty:5,color:'var(--clr-danger)'},
+  {name:'Paper Cups (S)',category:'Supplies',qty:12,color:'var(--clr-warning)'},
+  {name:'Blueberry Syrup',category:'Ingredients',qty:3,color:'var(--clr-danger)'},
+  {name:'Espresso Cups',category:'Supplies',qty:11,color:'var(--clr-warning)'},
+];
+
+const TOP_CUSTOMERS = [
+  {name:'David Moore',email:'dmoore@email.com',points:100,rank:'🥇'},
+  {name:'Matthew Allen',email:'mallen@email.com',points:90,rank:'🥈'},
+  {name:'Susan Garcia',email:'sgarcia@email.com',points:85,rank:'🥉'},
+  {name:'William Harris',email:'wharris@email.com',points:60,rank:'4'},
+  {name:'Emily Davis',email:'emily.d@email.com',points:55,rank:'5'},
+];
+
+/* ── Chart Data ── */
+const DAILY_REVENUE = [
+  {label:'Jan 1',val:1075},{label:'Jan 2',val:1579},{label:'Jan 3',val:455},
+  {label:'Jan 4',val:560},{label:'Jan 5',val:870},{label:'Jan 6',val:920},
+  {label:'Jan 7',val:340},{label:'Jan 8',val:695},{label:'Jan 9',val:1025},
+  {label:'Jan 10',val:420},
+];
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  // Session
+  const user = JSON.parse(sessionStorage.getItem('nb_user') || '{"name":"Alice Smith","avatar":"AS","role":"admin"}');
+  document.getElementById('welcomeName').textContent = user.name.split(' ')[0];
+  document.getElementById('sidebarName').textContent = user.name;
+  document.getElementById('sidebarAvatar').textContent = user.avatar || 'AS';
+  document.getElementById('sidebarRole').textContent = user.role === 'admin' ? 'Manager · Admin' : 'Barista · Staff';
+  document.getElementById('profileNameLarge').textContent = user.name;
+  document.getElementById('profileRoleLarge').textContent = user.role === 'admin' ? 'Manager · Admin' : 'Barista · Staff';
+  document.getElementById('profileAvatarLarge').textContent = user.avatar || 'AS';
+  document.getElementById('profileName').value = user.name;
+
+  // Date
+  const now = new Date();
+  document.getElementById('todayDate').textContent = now.toLocaleDateString('en-PH', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // KPI
+  const totalRev = DAILY_REVENUE.reduce((s,d)=>s+d.val,0);
+  document.getElementById('kpiRevenue').textContent = '₱' + totalRev.toLocaleString('en-PH',{minimumFractionDigits:2});
+  document.getElementById('kpiLowStock').textContent = LOW_STOCK.length;
+
+  // Activity Feed
+  const feed = document.getElementById('activityFeed');
+  SALES_DATA.slice(0,6).forEach(s => {
+    feed.innerHTML += `
+      <div class="activity-item">
+        <div class="activity-dot" style="background:var(--clr-primary-soft)">🛒</div>
+        <div class="activity-info">
+          <div class="activity-title">Sale #${String(s.id).padStart(4,'0')} — ${s.customer}</div>
+          <div class="activity-time">Served by ${s.employee} · ${s.date}</div>
+        </div>
+        <div class="activity-amount">₱${s.amount.toFixed(2)}</div>
+      </div>`;
+  });
+
+  // Staff Performance
+  const sp = document.getElementById('staffPerformance');
+  STAFF_DATA.forEach((s,i) => {
+    const pct = Math.round((s.revenue / 2650.50) * 100);
+    sp.innerHTML += `
+      <div class="staff-row">
+        <div style="width:24px;font-size:0.8rem;font-weight:700;color:var(--clr-text-muted);text-align:center">${i+1}</div>
+        <div class="staff-ava" style="background:${s.color};color:#fff">${s.init}</div>
+        <div style="flex:1">
+          <div class="staff-name">${s.name}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <div class="progress" style="flex:1"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <span style="font-size:0.7rem;color:var(--clr-text-muted)">${s.sales} sales</span>
+          </div>
+        </div>
+        <div class="staff-sales">₱${s.revenue.toLocaleString()}</div>
+      </div>`;
+  });
+
+  // Low Stock
+  const ls = document.getElementById('lowStockList');
+  LOW_STOCK.forEach(item => {
+    ls.innerHTML += `
+      <div class="stock-item">
+        <div>
+          <div class="stock-name">${item.name}</div>
+          <div class="stock-cat">${item.category}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-sm)">
+          <div class="progress" style="width:80px"><div class="progress-fill" style="width:${Math.round((item.qty/15)*100)}%;background:${item.color}"></div></div>
+          <div class="stock-qty" style="color:${item.color}">${item.qty}</div>
+        </div>
+      </div>`;
+  });
+
+  // Top Customers
+  const tc = document.getElementById('topCustomers');
+  TOP_CUSTOMERS.forEach(c => {
+    const pct = Math.round((c.points / 100) * 100);
+    tc.innerHTML += `
+      <div class="customer-row">
+        <div style="font-size:1.1rem;width:28px;text-align:center">${c.rank}</div>
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--clr-primary-soft);display:flex;align-items:center;justify-content:center;font-size:1rem">👤</div>
+        <div style="flex:1">
+          <div style="font-size:0.875rem;font-weight:600">${c.name}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <div class="progress" style="flex:1"><div class="progress-fill" style="width:${pct}%;background:var(--clr-amber)"></div></div>
+          </div>
+        </div>
+        <div style="font-size:0.875rem;font-weight:800;color:var(--clr-amber)">${c.points} pts</div>
+      </div>`;
+  });
+
+  // Draw bar chart
+  drawBarChart();
+
+  // Sidebar toggle
+  document.getElementById('sidebarToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+});
+
+/* ── Bar Chart (pure SVG) ── */
+function drawBarChart() {
+  const canvas = document.getElementById('revenueChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.clientWidth || 360;
+  const H = canvas.clientHeight || 220;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = H * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const pad = {top:20, right:10, bottom:40, left:40};
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+  const maxVal = Math.max(...DAILY_REVENUE.map(d=>d.val));
+  const barW = cw / DAILY_REVENUE.length * 0.55;
+  const gap   = cw / DAILY_REVENUE.length;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + ch - (i / 4) * ch;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + cw, y);
+    ctx.stroke();
+    // Labels
+    ctx.fillStyle = '#7c7490';
+    ctx.font = '10px Outfit, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('₱' + Math.round(maxVal * i / 4), pad.left - 4, y + 3);
+  }
+
+  // Bars
+  DAILY_REVENUE.forEach((d, i) => {
+    const barH = (d.val / maxVal) * ch;
+    const x = pad.left + i * gap + gap / 2 - barW / 2;
+    const y = pad.top + ch - barH;
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, y, 0, pad.top + ch);
+    grad.addColorStop(0, '#8b5cf6');
+    grad.addColorStop(1, 'rgba(139,92,246,0.2)');
+    ctx.fillStyle = grad;
+
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, barH, [4,4,0,0]);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = '#7c7490';
+    ctx.font = '9px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(d.label.replace('Jan ',''), x + barW/2, pad.top + ch + 14);
+  });
+}
+
+/* ── Modals ── */
+function openSalesModal(e) { if(e) e.preventDefault(); document.getElementById('salesModal').classList.remove('hidden'); }
+function openInventoryModal(e) { if(e) e.preventDefault(); document.getElementById('inventoryModal').classList.remove('hidden'); }
+function openCustomersModal(e) { if(e) e.preventDefault(); document.getElementById('customersModal').classList.remove('hidden'); }
+function openEmployeesModal(e) { if(e) e.preventDefault(); document.getElementById('employeesModal').classList.remove('hidden'); }
+function openProfileModal(e)   { if(e && e.preventDefault) e.preventDefault(); document.getElementById('profileModal').classList.remove('hidden'); }
+
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// Close on backdrop
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', function(e) { if(e.target === this) this.classList.add('hidden'); });
+});
+
+function submitSale(e) {
+  e.preventDefault();
+  closeModal('salesModal');
+  showToast('✅ Sale recorded successfully! Stock updated via trigger.', 'success');
+}
+function submitProduct(e) {
+  e.preventDefault();
+  closeModal('inventoryModal');
+  showToast('✅ Product added to inventory!', 'success');
+}
+function submitCustomer(e) {
+  e.preventDefault();
+  closeModal('customersModal');
+  showToast('✅ Customer registered successfully!', 'success');
+}
+function submitEmployee(e) {
+  e.preventDefault();
+  closeModal('employeesModal');
+  showToast('✅ Employee added to the system!', 'success');
+}
+function saveProfile() {
+  closeModal('profileModal');
+  showToast('✅ Profile updated!', 'success');
+}
+
+/* ── Toast ── */
+function showToast(msg, type = 'success') {
+  const tc = document.getElementById('toastContainer');
+  const t  = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span class="toast-icon">${type === 'success' ? '✅' : '❌'}</span><span>${msg}</span>`;
+  tc.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+</script>
+</body>
+</html>

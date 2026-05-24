@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Net & Brew — Login to the Coffee Shop & Gaming Cafe Information System." />
+  <title>Login — Net & Brew Information System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
+  <style>
+    .auth-tagline {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      font-style: italic;
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: var(--space-md);
+    }
+    .auth-tagline span {
+      background: var(--grad-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .auth-desc {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+    .auth-stats {
+      display: flex;
+      gap: var(--space-xl);
+      margin-top: var(--space-xl);
+    }
+    .auth-stat-item { text-align: center; }
+    .auth-stat-val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: var(--grad-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .auth-stat-lbl { font-size: 0.72rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    .form-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 4px; }
+    .form-subtitle { color: var(--clr-text-muted); font-size: 0.9rem; margin-bottom: var(--space-xl); }
+
+    .role-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+    }
+    .role-option {
+      position: relative;
+    }
+    .role-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .role-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 0.875rem;
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--duration-base) var(--ease);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--clr-text-muted);
+    }
+    .role-label .role-icon { font-size: 1.5rem; }
+    .role-option input:checked + .role-label {
+      border-color: var(--clr-primary);
+      background: var(--clr-primary-soft);
+      color: var(--clr-primary);
+    }
+    .role-label:hover {
+      border-color: var(--clr-border-hover);
+      color: var(--clr-text);
+    }
+
+    .remember-forgot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .forgot-link {
+      font-size: 0.82rem;
+      color: var(--clr-primary);
+      font-weight: 600;
+      transition: opacity var(--duration-fast);
+    }
+    .forgot-link:hover { opacity: 0.75; }
+
+    .demo-creds {
+      background: var(--clr-amber-soft);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: var(--clr-amber);
+      margin-top: var(--space-md);
+    }
+    .demo-creds strong { display: block; margin-bottom: 2px; font-weight: 700; }
+
+    /* Animated background orbs */
+    .auth-orbs {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+    }
+    .orb-1 { width: 300px; height: 300px; background: var(--clr-primary); top: -50px; right: -50px; animation: float 6s ease-in-out infinite; }
+    .orb-2 { width: 200px; height: 200px; background: var(--clr-amber); bottom: 100px; left: 50px; animation: float 8s ease-in-out infinite reverse; }
+    .orb-3 { width: 150px; height: 150px; background: var(--clr-teal); top: 40%; left: 30%; animation: float 7s ease-in-out infinite 2s; }
+  </style>
+</head>
+<body>
+
+<div class="auth-layout">
+  <!-- Left Panel -->
+  <div class="auth-panel-left">
+    <img src="assets/hero_bg.jpg" alt="Net & Brew Cafe Interior" class="bg-image" />
+    <div class="auth-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="auth-left-logo">
+      <div style="width:40px;height:40px;background:var(--grad-primary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:var(--shadow-primary)">☕</div>
+      <div>
+        <div style="font-size:1rem;font-weight:800;color:#fff">Net & Brew</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.5)">Coffee • Gaming • Community</div>
+      </div>
+    </div>
+    <div class="auth-left-content animate-slide-up">
+      <div class="auth-tagline">Where every sip <span>powers</span> your game.</div>
+      <p class="auth-desc">Welcome to Net & Brew — the ultimate fusion of artisan coffee culture and competitive gaming. Manage your café, players, and inventory all in one place.</p>
+      <div class="auth-stats">
+        <div class="auth-stat-item">
+          <div class="auth-stat-val">30+</div>
+          <div class="auth-stat-lbl">Customers</div>
+        </div>
+        <div class="auth-stat-item">
+          <div class="auth-stat-val">10</div>
+          <div class="auth-stat-lbl">Staff Members</div>
+        </div>
+        <div class="auth-stat-item">
+          <div class="auth-stat-val">₱0k+</div>
+          <div class="auth-stat-lbl">Revenue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel (Login Form) -->
+  <div class="auth-panel-right">
+    <div class="auth-form-wrap animate-slide-up-delay-1">
+      <div id="loginAlert" class="alert alert-error hidden" style="margin-bottom:1rem" role="alert">
+        <span>⚠️</span>
+        <span id="loginAlertMsg">Invalid credentials.</span>
+      </div>
+
+      <h1 class="form-title">Welcome back 👋</h1>
+      <p class="form-subtitle">Sign in to your Net & Brew account</p>
+
+      <!-- Role Selector -->
+      <div class="role-selector" role="radiogroup" aria-label="Select your role">
+        <div class="role-option">
+          <input type="radio" name="role" id="roleAdmin" value="admin" checked />
+          <label class="role-label" for="roleAdmin">
+            <span class="role-icon">🛡️</span>
+            Admin
+          </label>
+        </div>
+        <div class="role-option">
+          <input type="radio" name="role" id="roleStaff" value="staff" />
+          <label class="role-label" for="roleStaff">
+            <span class="role-icon">☕</span>
+            Staff
+          </label>
+        </div>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div style="display:flex;flex-direction:column;gap:var(--space-md)">
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">Email Address</label>
+            <div class="input-wrapper">
+              <span class="input-icon">✉️</span>
+              <input class="form-control" type="email" id="loginEmail" placeholder="you@netandbrew.com" autocomplete="email" required />
+            </div>
+            <span class="form-error-msg hidden" id="emailError">Please enter a valid email.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input class="form-control" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
+              <button class="input-action" type="button" id="togglePass" aria-label="Toggle password visibility">👁️</button>
+            </div>
+            <span class="form-error-msg hidden" id="passError">Password is required.</span>
+          </div>
+
+          <div class="remember-forgot">
+            <label class="checkbox-group">
+              <input type="checkbox" id="rememberMe" />
+              <span>Remember me</span>
+            </label>
+            <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+          </div>
+
+          <button class="btn btn-primary btn-full btn-lg" type="submit" id="loginBtn">
+            <span id="loginBtnText">Sign In</span>
+            <span class="loader hidden" id="loginLoader"></span>
+          </button>
+        </div>
+      </form>
+
+      <div class="demo-creds">
+        <strong>🎮 Demo Credentials</strong>
+        Admin: <code>admin@netandbrew.com</code> / <code>admin123</code><br/>
+        Staff: &nbsp;<code>alice@netandbrew.com</code> / <code>staff123</code>
+      </div>
+
+      <p style="text-align:center;margin-top:var(--space-lg);font-size:0.82rem;color:var(--clr-text-muted)">
+        Having trouble? Contact <a href="mailto:support@netandbrew.com" style="color:var(--clr-primary);font-weight:600">support@netandbrew.com</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  /* ── Demo Auth ── */
+  const USERS = [
+    { email: 'admin@netandbrew.com', password: 'admin123', role: 'admin', name: 'Alice Smith', avatar: 'AS' },
+    { email: 'alice@netandbrew.com', password: 'staff123', role: 'staff', name: 'Bob Jones', avatar: 'BJ' },
+  ];
+
+  /* Toggle password visibility */
+  document.getElementById('togglePass').addEventListener('click', function() {
+    const inp = document.getElementById('loginPassword');
+    const isText = inp.type === 'text';
+    inp.type = isText ? 'password' : 'text';
+    this.textContent = isText ? '👁️' : '🙈';
+  });
+
+  /* Form submission */
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const role     = document.querySelector('input[name="role"]:checked').value;
+    let valid = true;
+
+    // Validate email
+    const emailErr = document.getElementById('emailError');
+    const emailCtrl = document.getElementById('loginEmail');
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailCtrl.classList.add('is-error');
+      emailErr.classList.remove('hidden');
+      valid = false;
+    } else {
+      emailCtrl.classList.remove('is-error');
+      emailErr.classList.add('hidden');
+    }
+
+    // Validate password
+    const passErr  = document.getElementById('passError');
+    const passCtrl = document.getElementById('loginPassword');
+    if (!password) {
+      passCtrl.classList.add('is-error');
+      passErr.classList.remove('hidden');
+      valid = false;
+    } else {
+      passCtrl.classList.remove('is-error');
+      passErr.classList.add('hidden');
+    }
+
+    if (!valid) return;
+
+    // Show loading
+    document.getElementById('loginBtnText').classList.add('hidden');
+    document.getElementById('loginLoader').classList.remove('hidden');
+    document.getElementById('loginBtn').disabled = true;
+
+    setTimeout(() => {
+      const user = USERS.find(u => u.email === email && u.password === password);
+      if (user) {
+        // Save session
+        sessionStorage.setItem('nb_user', JSON.stringify(user));
+        showToast('Welcome back, ' + user.name + '! 🎮☕', 'success');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+      } else {
+        document.getElementById('loginBtn').disabled = false;
+        document.getElementById('loginBtnText').classList.remove('hidden');
+        document.getElementById('loginLoader').classList.add('hidden');
+        const alert = document.getElementById('loginAlert');
+        document.getElementById('loginAlertMsg').textContent = 'Invalid email or password. Try the demo credentials.';
+        alert.classList.remove('hidden');
+        setTimeout(() => alert.classList.add('hidden'), 4000);
+      }
+    }, 1200);
+  });
+
+  /* Toast helper */
+  function showToast(msg, type = 'success') {
+    const tc = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span class="toast-icon">${type === 'success' ? '✅' : '❌'}</span><span>${msg}</span>`;
+    tc.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+</script>
+</body>
+</html>

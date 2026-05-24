@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="About Net & Brew — Our story, mission, and team behind the best gaming cafe in the city." />
+  <title>About the Program — Net & Brew Information System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
+  <style>
+    /* Hero */
+    .about-hero {
+      position: relative;
+      overflow: hidden;
+      padding: 80px var(--space-2xl) 60px;
+      text-align: center;
+      background: var(--clr-bg-2);
+      border-bottom: 1px solid var(--clr-border);
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139,92,246,0.18) 0%, transparent 70%);
+    }
+    .about-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--clr-primary-soft);
+      border: 1px solid rgba(139,92,246,0.25);
+      color: var(--clr-primary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      margin-bottom: var(--space-lg);
+    }
+    .about-hero-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: var(--space-md);
+    }
+    .about-hero-title .gradient-text {
+      background: var(--grad-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .about-hero-desc {
+      max-width: 600px;
+      margin: 0 auto var(--space-xl);
+      color: var(--clr-text-muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    /* Feature cards */
+    .feature-icon {
+      width: 56px; height: 56px;
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: var(--space-md);
+      flex-shrink: 0;
+    }
+    .feature-card {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      transition: all var(--duration-base) var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity var(--duration-slow) var(--ease);
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card.card-purple::before { background: radial-gradient(circle at top left, rgba(139,92,246,0.07) 0%, transparent 60%); }
+    .feature-card.card-amber::before  { background: radial-gradient(circle at top left, rgba(245,158,11,0.07) 0%,  transparent 60%); }
+    .feature-card.card-teal::before   { background: radial-gradient(circle at top left, rgba(20,184,166,0.07) 0%,  transparent 60%); }
+    .feature-card.card-pink::before   { background: radial-gradient(circle at top left, rgba(236,72,153,0.07) 0%,  transparent 60%); }
+    .feature-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .feature-desc  { color: var(--clr-text-muted); font-size: 0.875rem; line-height: 1.6; }
+
+    /* Team */
+    .team-card {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+      transition: all var(--duration-base) var(--ease);
+    }
+    .team-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--clr-border-hover); }
+    .team-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto var(--space-md);
+      border: 3px solid var(--clr-border);
+      position: relative;
+    }
+    .team-avatar::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      background: var(--grad-primary) border-box;
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity var(--duration-base);
+    }
+    .team-card:hover .team-avatar::after { opacity: 1; }
+    .team-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 2px; }
+    .team-role { font-size: 0.78rem; color: var(--clr-text-muted); font-weight: 500; }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 32px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 9px; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--clr-primary), var(--clr-amber));
+    }
+    .timeline-item { position: relative; margin-bottom: var(--space-xl); }
+    .timeline-dot {
+      position: absolute;
+      left: -27px; top: 3px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--clr-primary);
+      background: var(--clr-bg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .timeline-dot::after {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--clr-primary);
+    }
+    .timeline-year { font-size: 0.72rem; font-weight: 700; color: var(--clr-primary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .timeline-event { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+    .timeline-detail { font-size: 0.82rem; color: var(--clr-text-muted); }
+
+    /* Section */
+    .content-section { padding: var(--space-3xl) var(--space-2xl); }
+    .section-eyebrow {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--clr-primary);
+      margin-bottom: var(--space-sm);
+    }
+    .section-heading { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; margin-bottom: var(--space-sm); }
+    .section-lead { color: var(--clr-text-muted); font-size: 0.95rem; max-width: 600px; line-height: 1.7; }
+
+    /* System modules grid */
+    .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); }
+    .module-pill {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      transition: all var(--duration-base) var(--ease);
+      text-decoration: none;
+      color: var(--clr-text);
+    }
+    .module-pill:hover { border-color: var(--clr-primary); background: var(--clr-primary-soft); transform: translateX(4px); }
+    .module-pill .mp-icon { font-size: 1.4rem; }
+    .module-pill .mp-text { font-size: 0.875rem; font-weight: 600; }
+
+    /* Tech stack */
+    .tech-tag {
+      background: var(--clr-surface-2);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--clr-text-muted);
+      display: inline-block;
+    }
+
+    /* Mission/Vision cards */
+    .mv-card {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      position: relative;
+      overflow: hidden;
+    }
+    .mv-label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-sm);
+    }
+    .mv-text {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-style: italic;
+      line-height: 1.6;
+      color: var(--clr-text);
+    }
+    .mv-card.mission::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: var(--clr-primary-glow);
+      filter: blur(40px);
+    }
+    .mv-card.vision::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: var(--clr-amber-glow);
+      filter: blur(40px);
+    }
+
+    /* Topnav for about page */
+    .about-topnav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,12,18,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--clr-border);
+      padding: 0 var(--space-2xl);
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .about-nav-brand { display: flex; align-items: center; gap: var(--space-sm); }
+    .about-nav-links { display: flex; align-items: center; gap: var(--space-md); }
+    .about-nav-links a {
+      font-size: 0.85rem; font-weight: 600; color: var(--clr-text-muted);
+      transition: color var(--duration-fast);
+      padding: 4px 8px;
+    }
+    .about-nav-links a:hover { color: var(--clr-text); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .content-section { padding: var(--space-2xl) var(--space-lg); }
+      .about-hero { padding: 60px var(--space-lg) 40px; }
+      .about-topnav { padding: 0 var(--space-lg); }
+      .about-nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top Nav -->
+<nav class="about-topnav">
+  <div class="about-nav-brand">
+    <div style="width:36px;height:36px;background:var(--grad-primary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:var(--shadow-primary)">☕</div>
+    <div>
+      <div style="font-size:0.95rem;font-weight:800;background:var(--grad-hero);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Net & Brew</div>
+      <div style="font-size:0.62rem;color:var(--clr-text-muted)">Information System</div>
+    </div>
+  </div>
+  <div class="about-nav-links">
+    <a href="#overview">Overview</a>
+    <a href="#features">Features</a>
+    <a href="#team">Team</a>
+    <a href="#system">System</a>
+  </div>
+  <a href="index.html" class="btn btn-primary" style="font-size:0.82rem;padding:0.5rem 1.1rem;">← Login</a>
+</nav>
+
+<!-- Hero -->
+<section class="about-hero" id="overview">
+  <div style="position:relative;z-index:1">
+    <div class="about-hero-badge">☕ 🎮 &nbsp; Coffee · Gaming · Community</div>
+    <h1 class="about-hero-title">
+      Welcome to<br/>
+      <span class="gradient-text">Net & Brew</span>
+    </h1>
+    <p class="about-hero-desc">A next-generation café experience where artisan coffee meets competitive gaming culture. Our information system is built to power every corner of this journey.</p>
+    <div style="display:flex;gap:var(--space-md);justify-content:center;flex-wrap:wrap">
+      <div class="badge badge-primary">v1.0.0 — Activity 4</div>
+      <div class="badge badge-amber">MariaDB 10.4</div>
+      <div class="badge badge-teal">BSIT — Database Management</div>
+    </div>
+  </div>
+</section>
+
+<!-- Mission & Vision -->
+<section class="content-section" style="background:var(--clr-bg-2)">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="section-eyebrow">Our Purpose</div>
+    <div class="section-heading">Mission & Vision</div>
+    <div class="grid-2" style="margin-top:var(--space-xl)">
+      <div class="mv-card mission">
+        <div class="mv-label" style="color:var(--clr-primary)">🚀 Mission</div>
+        <p class="mv-text">"To provide a cozy, high-speed gaming sanctuary where great coffee fuels great plays — empowered by data-driven management."</p>
+      </div>
+      <div class="mv-card vision">
+        <div class="mv-label" style="color:var(--clr-amber)">✨ Vision</div>
+        <p class="mv-text">"To become the most beloved gaming café brand by merging premium café culture with top-tier digital entertainment."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="content-section" id="features">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="section-eyebrow">What We Offer</div>
+    <div class="section-heading">Core Features</div>
+    <p class="section-lead" style="margin-bottom:var(--space-2xl)">Our information system manages every aspect of the Net & Brew experience — from inventory to customer loyalty.</p>
+
+    <div class="grid-2" style="gap:var(--space-md)">
+      <div class="feature-card card-purple animate-slide-up">
+        <div class="feature-icon" style="background:var(--clr-primary-soft)">📊</div>
+        <div class="feature-title">Real-time Dashboard</div>
+        <p class="feature-desc">Monitor sales, stock levels, and staff performance from a unified command center. Decisions powered by live data.</p>
+      </div>
+      <div class="feature-card card-amber animate-slide-up-delay-1">
+        <div class="feature-icon" style="background:var(--clr-amber-soft)">🛒</div>
+        <div class="feature-title">Sales & POS Tracking</div>
+        <p class="feature-desc">Capture every transaction with linked customer and employee records. Full sale item breakdown with unit pricing.</p>
+      </div>
+      <div class="feature-card card-teal animate-slide-up-delay-2">
+        <div class="feature-icon" style="background:var(--clr-teal-soft)">📦</div>
+        <div class="feature-title">Inventory Management</div>
+        <p class="feature-desc">Automatic stock deduction on sale, restock via stored procedures, and low-stock alerts powered by database views.</p>
+      </div>
+      <div class="feature-card card-pink animate-slide-up-delay-3">
+        <div class="feature-icon" style="background:rgba(236,72,153,0.1)">🎁</div>
+        <div class="feature-title">Loyalty Points System</div>
+        <p class="feature-desc">Reward your most loyal gamers and coffee lovers. Track customer spend and loyalty points across all visits.</p>
+      </div>
+      <div class="feature-card card-purple">
+        <div class="feature-icon" style="background:var(--clr-primary-soft)">👥</div>
+        <div class="feature-title">Staff Performance</div>
+        <p class="feature-desc">View_staff_performance tracks each barista's sales count and total revenue — perfect for performance reviews.</p>
+      </div>
+      <div class="feature-card card-amber">
+        <div class="feature-icon" style="background:var(--clr-amber-soft)">📈</div>
+        <div class="feature-title">Report Generator</div>
+        <p class="feature-desc">Generate daily sales reports, low-stock alerts, and customer spend analysis with one-click exports.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- System Info -->
+<section class="content-section" id="system" style="background:var(--clr-bg-2)">
+  <div style="max-width:1100px;margin:0 auto">
+    <div class="grid-2" style="gap:var(--space-2xl);align-items:start">
+      
+      <!-- Left: Modules -->
+      <div>
+        <div class="section-eyebrow">System Navigation</div>
+        <div class="section-heading">Available Modules</div>
+        <p class="section-lead" style="margin-bottom:var(--space-xl)">Access all five core modules of the Net & Brew Information System:</p>
+        <div style="display:flex;flex-direction:column;gap:var(--space-sm)">
+          <a href="index.html" class="module-pill">
+            <span class="mp-icon">🔐</span>
+            <div><div class="mp-text">Login</div><div style="font-size:0.72rem;color:var(--clr-text-muted)">Secure role-based access</div></div>
+          </a>
+          <a href="forgot-password.html" class="module-pill">
+            <span class="mp-icon">🔑</span>
+            <div><div class="mp-text">Password Recovery</div><div style="font-size:0.72rem;color:var(--clr-text-muted)">3-step OTP verification</div></div>
+          </a>
+          <a href="about.html" class="module-pill" style="border-color:var(--clr-primary);background:var(--clr-primary-soft)">
+            <span class="mp-icon">ℹ️</span>
+            <div><div class="mp-text" style="color:var(--clr-primary)">About the Program</div><div style="font-size:0.72rem;color:var(--clr-text-muted)">System overview & info</div></div>
+          </a>
+          <a href="dashboard.html" class="module-pill">
+            <span class="mp-icon">📊</span>
+            <div><div class="mp-text">Dashboard</div><div style="font-size:0.72rem;color:var(--clr-text-muted)">Analytics & KPIs</div></div>
+          </a>
+          <a href="reports.html" class="module-pill">
+            <span class="mp-icon">📋</span>
+            <div><div class="mp-text">Report Generator</div><div style="font-size:0.72rem;color:var(--clr-text-muted)">Exportable data reports</div></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Tech stack & timeline -->
+      <div>
+        <div class="section-eyebrow">Technology Stack</div>
+        <div class="section-heading">Built With</div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-sm);margin-bottom:var(--space-2xl)">
+          <span class="tech-tag">HTML5</span>
+          <span class="tech-tag">CSS3</span>
+          <span class="tech-tag">JavaScript ES6+</span>
+          <span class="tech-tag">MariaDB 10.4</span>
+          <span class="tech-tag">phpMyAdmin 5.2</span>
+          <span class="tech-tag">PHP 8.2</span>
+          <span class="tech-tag">SQL Triggers</span>
+          <span class="tech-tag">Stored Procedures</span>
+          <span class="tech-tag">SQL Views</span>
+        </div>
+
+        <div class="section-eyebrow">Project History</div>
+        <div class="section-heading" style="margin-bottom:var(--space-lg)">Timeline</div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-year">Activity 1</div>
+            <div class="timeline-event">Database Design</div>
+            <div class="timeline-detail">Entity-relationship modeling and schema design for coffee_shop_db</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-year">Activity 2</div>
+            <div class="timeline-event">Database Population</div>
+            <div class="timeline-detail">Inserted 30 customers, 10 employees, products, sales, and sale items</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-year">Activity 3</div>
+            <div class="timeline-event">Advanced SQL</div>
+            <div class="timeline-detail">Implemented triggers, stored procedures, functions, and views</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-year">Activity 4</div>
+            <div class="timeline-event">User Interface</div>
+            <div class="timeline-detail">Full-stack UI with 5 modules: Login, Recovery, About, Dashboard, Reports</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Team -->
+<section class="content-section" id="team">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:var(--space-2xl)">
+      <div class="section-eyebrow">The People</div>
+      <div class="section-heading">Meet the Team</div>
+      <p style="color:var(--clr-text-muted)">The dedicated staff behind Net & Brew's daily operations.</p>
+    </div>
+
+    <div class="grid-4" style="gap:var(--space-md)">
+      <div class="team-card animate-slide-up">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">👩</div>
+        <div class="team-name">Alice Smith</div>
+        <div class="team-role">Manager</div>
+        <div style="margin-top:var(--space-sm)"><span class="badge badge-primary">Admin</span></div>
+      </div>
+      <div class="team-card animate-slide-up-delay-1">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706)">👨</div>
+        <div class="team-name">Bob Jones</div>
+        <div class="team-role">Barista</div>
+        <div style="margin-top:var(--space-sm)"><span class="badge badge-amber">Staff</span></div>
+      </div>
+      <div class="team-card animate-slide-up-delay-2">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#14b8a6,#0d9488)">👨</div>
+        <div class="team-name">Charlie Brown</div>
+        <div class="team-role">Barista</div>
+        <div style="margin-top:var(--space-sm)"><span class="badge badge-teal">Staff</span></div>
+      </div>
+      <div class="team-card animate-slide-up-delay-3">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#ec4899,#be185d)">👩</div>
+        <div class="team-name">Diana Prince</div>
+        <div class="team-role">Shift Lead</div>
+        <div style="margin-top:var(--space-sm)"><span class="badge badge-primary">Staff</span></div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">👨</div>
+        <div class="team-name">Ethan Hunt</div>
+        <div class="team-role">Barista</div>
+        <div style="margin-top:var(--space-sm)"><span class="badge badge-amber">Staff</span></div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#22c55e,#16a34a)">👩</div>
+        <div class="team-name">Fiona Gallagher</div>
+        <div class="team-role">Barista</div>
+        <div style="margin-top:var(--space-sm)"><span class="badge badge-teal">Staff</span></div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#f97316,#ea580c)">👨</div>
+        <div class="team-name">George Costanza</div>
+        <div class="team-role">Inventory</div>
+        <div style="margin-top:var(--space-sm)"><span class="badge badge-amber">Staff</span></div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#a855f7,#7e22ce)">👩</div>
+        <div class="team-name">Julia Child</div>
+        <div class="team-role">Chef</div>
+        <div style="margin-top:var(--space-sm)"><span class="badge badge-primary">Staff</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Footer -->
+<section style="padding:var(--space-2xl);background:var(--clr-bg-2);border-top:1px solid var(--clr-border);text-align:center">
+  <div style="max-width:500px;margin:0 auto">
+    <div style="font-size:2rem;margin-bottom:var(--space-md)">☕🎮</div>
+    <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:var(--space-sm)">Ready to manage Net & Brew?</h2>
+    <p style="color:var(--clr-text-muted);margin-bottom:var(--space-xl)">Access the full information system and start managing your café like a pro.</p>
+    <div style="display:flex;gap:var(--space-md);justify-content:center;flex-wrap:wrap">
+      <a href="index.html" class="btn btn-primary btn-lg">Sign In Now</a>
+      <a href="dashboard.html" class="btn btn-ghost btn-lg">View Dashboard</a>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
