@@ -10,6 +10,8 @@ namespace NetAndBrewWinForms
         [STAThread]
         static void Main()
         {
+            // Initializing application configuration for Net & Brew System
+            // (Updated by collaborator Email2)
             ApplicationConfiguration.Initialize();
             Application.Run(new LoginForm());
         }
